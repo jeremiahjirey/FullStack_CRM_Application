@@ -1,4 +1,6 @@
+import FormEditEmployee from "@/Components/form/FormEditEmployee";
 import HeaderEdited from "@/Components/HeaderEdited";
+import { useToast } from "@/hooks/use-toast";
 import { useForm } from "@inertiajs/react";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
@@ -7,7 +9,10 @@ function EditEmployes() {
     const [id, setId] = useState(null);
     const [divisions, setDivisions] = useState([]);
     const [companies, setCompanies] = useState([]);
+    const [filteredDivisions, setFilteredDivisions] = useState([]);
     const [success, setSuccess] = useState(false);
+    const [errors, setErrors] = useState({}); // State untuk menyimpan error
+    const { toast } = useToast();
 
     const { data, setData } = useForm({
         first_name: "",
@@ -21,19 +26,20 @@ function EditEmployes() {
     const inputFields = [
         { key: "first_name", label: "First Name", type: "text" },
         { key: "last_name", label: "Last Name", type: "text" },
-        { key: "email", label: "Email", type: "email" },
-        { key: "phone", label: "Phone", type: "text" },
+        { key: "email", label: "Email", type: "text" }, // Ubah dari email ke text
+        { key: "phone", label: "Phone", type: "number" }, // Ubah dari text ke number
         {
             key: "company_id",
             label: "Company",
             type: "select",
-            options: companies, // gunakan data dari state
+            options: companies,
         },
         {
             key: "division_id",
             label: "Division",
             type: "select",
-            options: divisions, // gunakan data dari state
+            options: filteredDivisions,
+            disabled: !data.company_id, // Disable jika company belum dipilih
         },
     ];
 
@@ -78,21 +84,19 @@ function EditEmployes() {
     }, [id]);
 
     useEffect(() => {
-        // Fetch data divisions
         const fetchDivisions = async () => {
             try {
                 const response = await axios.get("/api/divisions");
-                setDivisions(response.data.data); // Pastikan data diambil sesuai struktur API
+                setDivisions(response.data.data);
             } catch (error) {
                 console.error("Error fetching divisions:", error);
             }
         };
 
-        // Fetch data companies
         const fetchCompanies = async () => {
             try {
                 const response = await axios.get("/api/company");
-                setCompanies(response.data.data); // Pastikan data diambil sesuai struktur API
+                setCompanies(response.data.data);
             } catch (error) {
                 console.error("Error fetching companies:", error);
             }
@@ -102,15 +106,48 @@ function EditEmployes() {
         fetchCompanies();
     }, []);
 
+    useEffect(() => {
+        if (data.company_id) {
+            const filtered = divisions.filter(
+                (division) => division.company_id === parseInt(data.company_id)
+            );
+            setFilteredDivisions(filtered);
+        } else {
+            setFilteredDivisions([]);
+        }
+    }, [data.company_id, divisions]);
+
+    const validate = () => {
+        const newErrors = {};
+        if (!data.first_name.trim())
+            newErrors.first_name = "First name is required.";
+        if (!data.last_name.trim())
+            newErrors.last_name = "Last name is required.";
+        if (!data.email.trim()) {
+            newErrors.email = "Email is required.";
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+            newErrors.email = "Invalid email format.";
+        }
+        if (!data.phone.trim()) newErrors.phone = "Phone number is required.";
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
     const save = async (e) => {
         e.preventDefault();
+        if (!validate()) return; // Hentikan jika ada error
+
         try {
-            console.log(data);
             await axios.put(`/api/employees/${id}`, data);
             setSuccess(true);
             window.location.href = "/data/employees";
         } catch (error) {
-            console.error(error);
+            toast({
+                title: "Error",
+                description: "Failed to Edit Employee",
+                variant: "destructive",
+            });
             setSuccess(false);
         }
     };
@@ -133,80 +170,14 @@ function EditEmployes() {
                                 Update Employee information.
                             </p>
                         </div>
-                        <form
-                            className="flex flex-col gap-8 mt-6"
-                            onSubmit={save}
-                        >
-                            {inputFields.map((field) => (
-                                <div
-                                    key={field.key}
-                                    className="flex flex-col gap-1"
-                                >
-                                    <label
-                                        htmlFor={field.key}
-                                        className="block text-sm font-medium text-gray-700"
-                                    >
-                                        {field.label}
-                                    </label>
-                                    {field.type === "text" ||
-                                    field.type === "email" ? (
-                                        <input
-                                            id={field.key}
-                                            type={field.type}
-                                            value={data[field.key] || ""}
-                                            onChange={(e) =>
-                                                setData(
-                                                    field.key,
-                                                    e.target.value
-                                                )
-                                            }
-                                            className="w-full rounded-md max-w-xl"
-                                            required
-                                        />
-                                    ) : (
-                                        <select
-                                            id={field.key}
-                                            value={data[field.key] || ""}
-                                            onChange={(e) =>
-                                                setData(
-                                                    field.key,
-                                                    e.target.value
-                                                )
-                                            }
-                                            className="w-full rounded-md max-w-xl"
-                                        >
-                                            <option value="">
-                                                Select {field.label}
-                                            </option>
-                                            {field.options.map((option) => (
-                                                <option
-                                                    key={option.id}
-                                                    value={option.id}
-                                                >
-                                                    {option.name ||
-                                                        option.name_division}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    )}
-                                </div>
-                            ))}
-                            <div className="flex gap-5">
-                                <button
-                                    type="button"
-                                    className="inline-flex items-center rounded-md border border-transparent bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-gray-700 focus:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 active:bg-gray-900"
-                                    onClick={handleBack}
-                                >
-                                    Back
-                                </button>
-                                <button
-                                    type="submit"
-                                    className="inline-flex items-center rounded-md border border-transparent bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-gray-700 focus:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 active:bg-gray-900"
-                                >
-                                    Save
-                                </button>
-                            </div>
-                        </form>
+                        <FormEditEmployee
+                            save={save}
+                            inputFields={inputFields}
+                            setData={setData}
+                            errors={errors}
+                            data={data}
+                            handleBack={handleBack}
+                        />
                     </div>
                 </div>
             </div>

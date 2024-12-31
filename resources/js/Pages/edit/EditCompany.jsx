@@ -4,10 +4,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import FormEditCompany from "@/Components/form/FormEditCompany";
 
 function EditCompany() {
     const [id, setId] = useState(null);
     const [success, setSuccess] = useState(false);
+    const [errors, setErrors] = useState({});
+    const { toast } = useToast();
 
     const { data, setData } = useForm({
         name: "",
@@ -27,7 +31,7 @@ function EditCompany() {
         }
 
         const urlParams = new URLSearchParams(window.location.search);
-        const userId = urlParams.get("0"); // Mengambil nilai dari ?0=2
+        const userId = urlParams.get("id");
         setId(userId);
     }, []);
 
@@ -53,8 +57,35 @@ function EditCompany() {
         }
     }, [id]);
 
+    const validate = () => {
+        const newErrors = {};
+
+        if (!data.name.trim()) {
+            newErrors.name = "Company name is required.";
+        }
+
+        if (!data.email.trim()) {
+            newErrors.email = "Email is required.";
+        } else if (!/^\S+@\S+\.\S+$/.test(data.email)) {
+            newErrors.email = "Invalid email format.";
+        }
+
+        if (!data.website.trim()) {
+            newErrors.website = "Website is required.";
+        } else if (!/^https?:\/\/.+$/.test(data.website)) {
+            newErrors.website = "Website must start with http:// or https://.";
+        }
+
+        setErrors(newErrors);
+
+        // Return true if no errors
+        return Object.keys(newErrors).length === 0;
+    };
+
     const save = async (e) => {
         e.preventDefault();
+
+        if (!validate()) return;
 
         const formData = new FormData();
         formData.append("name", data.name);
@@ -74,13 +105,50 @@ function EditCompany() {
             setSuccess(true);
             window.location.href = "/data/companyes";
         } catch (error) {
-            console.error("Error updating company data:", error);
+            toast({
+                title: "Error",
+                description: "Failed to edit Division",
+                variant: "destructive",
+            });
             setSuccess(false);
         }
     };
 
     const handleBack = () => {
         window.location.href = "/data/companyes";
+    };
+
+    const validateLogo = (file) => {
+        return new Promise((resolve, reject) => {
+            if (file.size > 5 * 1024 * 1024) {
+                reject("File size must not exceed 5MB.");
+                return;
+            }
+
+            const img = new Image();
+            img.onload = () => {
+                if (img.width > 500 || img.height > 500) {
+                    reject("Image dimensions must not exceed 500x500 pixels.");
+                } else {
+                    resolve();
+                }
+            };
+            img.onerror = () => reject("Invalid image file.");
+            img.src = URL.createObjectURL(file);
+        });
+    };
+
+    const handleLogoChange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        try {
+            await validateLogo(file);
+            setData("logo", file);
+            setErrors((prev) => ({ ...prev, logo: null }));
+        } catch (error) {
+            setErrors((prev) => ({ ...prev, logo: error }));
+        }
     };
 
     return (
@@ -97,94 +165,14 @@ function EditCompany() {
                                 Update Company information.
                             </p>
                         </div>
-                        <form
-                            className="flex flex-col gap-8 mt-6"
-                            onSubmit={save}
-                        >
-                            <div className="flex flex-col gap-1">
-                                <label
-                                    htmlFor="name"
-                                    className="block text-sm font-medium text-gray-700"
-                                >
-                                    Company Name
-                                </label>
-                                <input
-                                    type="text"
-                                    autoComplete="off"
-                                    className="w-full rounded-md max-w-xl"
-                                    id="name"
-                                    required
-                                    value={data.name || ""}
-                                    onChange={(e) =>
-                                        setData("name", e.target.value)
-                                    }
-                                />
-                            </div>
-                            <div className="flex flex-col gap-1">
-                                <Label htmlFor="logo">Logo</Label>
-                                <Input
-                                    id="logo"
-                                    type="file"
-                                    className="w-full rounded-md max-w-xl border-black"
-                                    onChange={(e) =>
-                                        setData("logo", e.target.files[0])
-                                    }
-                                />
-                            </div>
-                            <div className="flex flex-col gap-1">
-                                <label
-                                    htmlFor="email_division"
-                                    className="block text-sm font-medium text-gray-700"
-                                >
-                                    Email
-                                </label>
-                                <input
-                                    type="text"
-                                    autoComplete="off"
-                                    className="w-full rounded-md max-w-xl"
-                                    id="email_division"
-                                    required
-                                    value={data.email || ""}
-                                    onChange={(e) =>
-                                        setData("email", e.target.value)
-                                    }
-                                />
-                            </div>
-                            <div className="flex flex-col gap-1">
-                                <label
-                                    htmlFor="website"
-                                    className="block text-sm font-medium text-gray-700"
-                                >
-                                    Website
-                                </label>
-                                <input
-                                    type="text"
-                                    autoComplete="off"
-                                    className="w-full rounded-md max-w-xl"
-                                    id="website"
-                                    required
-                                    value={data.website || ""}
-                                    onChange={(e) =>
-                                        setData("website", e.target.value)
-                                    }
-                                />
-                            </div>
-                            <div className="flex gap-5">
-                                <button
-                                    type="button"
-                                    className="inline-flex items-center rounded-md border border-transparent bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-gray-700 focus:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 active:bg-gray-900"
-                                    onClick={handleBack}
-                                >
-                                    Back
-                                </button>
-                                <button
-                                    type="submit"
-                                    className="inline-flex items-center rounded-md border border-transparent bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-gray-700 focus:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 active:bg-gray-900"
-                                >
-                                    Save
-                                </button>
-                            </div>
-                        </form>
+                        <FormEditCompany
+                            save={save}
+                            errors={errors}
+                            data={data}
+                            setData={setData}
+                            handleBack={handleBack}
+                            handleLogoChange={handleLogoChange}
+                        />
                     </div>
                 </div>
             </div>

@@ -1,3 +1,4 @@
+import { useToast } from "@/hooks/use-toast";
 import { headerTable } from "@/lib";
 import { Inertia } from "@inertiajs/inertia";
 import axios from "axios";
@@ -11,6 +12,7 @@ export function TableEmployees() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [EmpToDelete, setEmpToDelete] = useState(null); // Untuk menyimpan user yang ingin dihapus
     const [currentPage, setCurrentPage] = useState(1);
+    const { toast } = useToast();
 
     const itemsPerPage = 10;
 
@@ -85,6 +87,11 @@ export function TableEmployees() {
             setDataEmployee((prev) =>
                 prev.filter((u) => u.id !== EmpToDelete.id)
             );
+            toast({
+                title: "Deleted Employee",
+                description: "Succesful to Delete Employee",
+                variant: "success",
+            });
             closeModal();
         } catch (error) {
             console.error("Error deleting user:", error);

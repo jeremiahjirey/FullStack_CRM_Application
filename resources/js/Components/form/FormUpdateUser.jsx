@@ -1,6 +1,6 @@
 import React from "react";
 
-function FormUpdateUser({ saveUpdate, data, setData }) {
+function FormUpdateUser({ save, data, setData, usernameError, emailError }) {
     return (
         <div className="bg-white p-4 shadow sm:rounded-lg sm:p-8">
             <div>
@@ -11,7 +11,7 @@ function FormUpdateUser({ saveUpdate, data, setData }) {
                     Update your account's profile information and email address.
                 </p>
             </div>
-            <form className="flex flex-col gap-8 mt-6" onSubmit={saveUpdate}>
+            <form className="flex flex-col gap-8 mt-6" onSubmit={save}>
                 <div className="flex flex-col gap-1">
                     <label
                         htmlFor="username"
@@ -22,13 +22,19 @@ function FormUpdateUser({ saveUpdate, data, setData }) {
                     <input
                         type="text"
                         autoComplete="off"
-                        className="w-full rounded-md max-w-xl"
+                        className={`w-full rounded-md max-w-xl ${
+                            usernameError ? "border-red-500" : ""
+                        }`}
                         id="username"
                         value={data.ussername || ""}
-                        required
                         placeholder="Username"
                         onChange={(e) => setData("ussername", e.target.value)}
                     />
+                    {usernameError && (
+                        <span className="text-red-500 text-sm mt-1">
+                            {usernameError}
+                        </span>
+                    )}
                 </div>
                 <div className="flex flex-col gap-1">
                     <label
@@ -38,15 +44,21 @@ function FormUpdateUser({ saveUpdate, data, setData }) {
                         Email
                     </label>
                     <input
-                        type="email"
+                        type="text"
                         autoComplete="off"
                         placeholder="Email Address"
-                        className="w-full rounded-md max-w-xl"
+                        className={`w-full rounded-md max-w-xl ${
+                            emailError ? "border-red-500" : ""
+                        }`}
                         id="email"
                         value={data.email || ""}
-                        required
                         onChange={(e) => setData("email", e.target.value)}
                     />
+                    {emailError && (
+                        <span className="text-red-500 text-sm mt-1">
+                            {emailError}
+                        </span>
+                    )}
                 </div>
 
                 <div className="flex gap-5">

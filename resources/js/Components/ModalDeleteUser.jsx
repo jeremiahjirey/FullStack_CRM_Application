@@ -1,29 +1,6 @@
 import React from "react";
 
-function Modal(data, table) {
-    const [userToDelete, setUserToDelete] = useState(null); // Untuk menyimpan user yang ingin dihapus
-
-    // Fungsi untuk menutup modal
-    const closeModal = () => {
-        setUserToDelete(null);
-        setIsModalOpen(false);
-    };
-
-    // Fungsi untuk menghapus user
-    const handleDelete = async () => {
-        try {
-            // Lakukan request untuk menghapus user berdasarkan ID
-            await axios.delete(`/api/users/${userToDelete.id}`);
-            // Hapus user dari state dataUsers
-            setDataUsers((prev) =>
-                prev.filter((u) => u.id !== userToDelete.id)
-            );
-            closeModal();
-        } catch (error) {
-            console.error("Error deleting user:", error);
-        }
-    };
-
+function DeletedUserModal({ userToDelete, closeModal, handleDelete }) {
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white rounded-lg p-6">
@@ -52,4 +29,4 @@ function Modal(data, table) {
     );
 }
 
-export default Modal;
+export default DeletedUserModal;

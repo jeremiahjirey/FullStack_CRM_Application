@@ -59,3 +59,7 @@ Route::get('add-data/division', function () {
 Route::get('add-data/employee', function () {
     return Inertia::render('add/AddEmployes');
 });
+
+Route::get('coba', function () {
+    return Inertia::render('coba');
+});

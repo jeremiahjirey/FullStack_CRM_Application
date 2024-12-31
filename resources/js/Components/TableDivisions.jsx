@@ -49,7 +49,6 @@ export function TableDivisions() {
                 });
 
                 setDataDivision(groupedData);
-                console.log(groupedData);
             } catch (error) {
                 console.error("Error fetching data:", error);
             }
@@ -173,9 +172,13 @@ export function TableDivisions() {
                                             rowSpan={division.employees.length}
                                             className="px-6 py-4"
                                         >
-                                            {division.company
-                                                ? division.company.name
-                                                : "No Company Selected"}
+                                            {division.company ? (
+                                                division.company.name
+                                            ) : (
+                                                <span className="text-center italic text-gray-500">
+                                                    N/A
+                                                </span>
+                                            )}
                                         </td>
                                     )}
 

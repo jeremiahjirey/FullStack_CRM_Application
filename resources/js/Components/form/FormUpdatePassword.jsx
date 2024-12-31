@@ -10,6 +10,10 @@ function FormUpdatePassword({
     confirmPassword,
     newPassword,
     password,
+    showPassword,
+    showNewPassword,
+    showConfirmPassword,
+    togglePasswordVisibility,
 }) {
     return (
         <div className="mx-auto max-w-7xl space-y-6 sm:px-6 lg:px-8">
@@ -27,7 +31,7 @@ function FormUpdatePassword({
                     className="flex flex-col gap-8 mt-6"
                     onSubmit={updatePass}
                 >
-                    <div className="flex flex-col gap-1">
+                    <div className="flex flex-col gap-1  relative max-w-xl">
                         <label
                             htmlFor="passsword"
                             className="block text-sm font-medium text-gray-700"
@@ -35,24 +39,35 @@ function FormUpdatePassword({
                             Current Password
                         </label>
                         <input
-                            type="password"
+                            type={showPassword ? "text" : "password"}
                             autoComplete="off"
-                            className={`w-full rounded-md max-w-xl ${
+                            className={`w-full rounded-md  ${
                                 passwordError ? "border-red-500" : ""
                             }`}
                             id="passsword"
                             value={password}
-                            required
                             placeholder="Current Password"
                             onChange={(e) => setPassword(e.target.value)}
                         />
+                        <span
+                            className="absolute right-1 top-[27px] cursor-pointer bg-white p-2 text-gray-500"
+                            onClick={() => togglePasswordVisibility("current")}
+                        >
+                            <img
+                                src={`/storage/images/${
+                                    showPassword ? "eye" : "eye-slash"
+                                }.svg`}
+                                alt={showPassword ? "Hide" : "Show"}
+                                className="h-5 w-5"
+                            />
+                        </span>
                         {passwordError && (
                             <span className="text-sm text-red-500">
                                 {passwordError}
                             </span>
                         )}
                     </div>
-                    <div className="flex flex-col gap-1">
+                    <div className="flex flex-col gap-1  relative max-w-xl">
                         <label
                             htmlFor="new_passsword"
                             className="block text-sm font-medium text-gray-700"
@@ -60,19 +75,30 @@ function FormUpdatePassword({
                             New Password
                         </label>
                         <input
-                            type="password"
+                            type={showNewPassword ? "text" : "password"}
                             autoComplete="off"
-                            className={`w-full rounded-md max-w-xl ${
+                            className={`w-full rounded-md ${
                                 confirmPasswordError ? "border-red-500" : ""
                             }`}
                             id="new_passsword"
                             value={newPassword}
-                            required
                             placeholder="New Password"
                             onChange={(e) => setNewPassword(e.target.value)}
                         />
+                        <span
+                            className="absolute right-1 top-[27px] cursor-pointer bg-white p-2 text-gray-500"
+                            onClick={() => togglePasswordVisibility("new")}
+                        >
+                            <img
+                                src={`/storage/images/${
+                                    showNewPassword ? "eye" : "eye-slash"
+                                }.svg`}
+                                alt={showNewPassword ? "Hide" : "Show"}
+                                className="h-5 w-5"
+                            />
+                        </span>
                     </div>
-                    <div className="flex flex-col gap-1">
+                    <div className="flex flex-col gap-1  relative max-w-xl">
                         <label
                             htmlFor="current_passsword"
                             className="block text-sm font-medium text-gray-700"
@@ -80,17 +106,28 @@ function FormUpdatePassword({
                             Confirm New Password
                         </label>
                         <input
-                            type="password"
+                            type={showConfirmPassword ? "text" : "password"}
                             autoComplete="off"
-                            className={`w-full rounded-md max-w-xl ${
+                            className={`w-full rounded-md ${
                                 confirmPasswordError ? "border-red-500" : ""
                             }`}
                             value={confirmPassword}
                             id="current_passsword"
-                            required
                             placeholder="Confirm New Password"
                             onChange={(e) => setConfirmPassword(e.target.value)}
                         />
+                        <span
+                            className="absolute right-1 top-[27px] cursor-pointer bg-white p-2 text-gray-500"
+                            onClick={() => togglePasswordVisibility("confirm")}
+                        >
+                            <img
+                                src={`/storage/images/${
+                                    showConfirmPassword ? "eye" : "eye-slash"
+                                }.svg`}
+                                alt={showConfirmPassword ? "Hide" : "Show"}
+                                className="h-5 w-5"
+                            />
+                        </span>
                         {confirmPasswordError && (
                             <span className="text-sm text-red-500">
                                 {confirmPasswordError}

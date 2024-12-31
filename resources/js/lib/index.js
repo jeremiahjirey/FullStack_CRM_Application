@@ -85,12 +85,12 @@ export const headerTable = {
             "Action",
         ],
         admin: ["No", "Company Name", "Logo", "Email", "Website", "Action"],
-        user: ["No", "Company Name", "Logo", "Email", "Website"],
+        user: ["No", "Company Name", "Logo", "Email", "Website", "Action"],
     },
     tableDivision: {
         superAdmin: ["No", "Division Name", "Company", "Member", "Action"],
         admin: ["No", "Division Name", "Company", "Member", "Action"],
-        user: ["No", "Division Name", "Member", "Company"],
+        user: ["No", "Division Name", "Company", "Member"],
     },
 };
 

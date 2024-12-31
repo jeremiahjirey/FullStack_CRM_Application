@@ -3,8 +3,8 @@ import Navbar from "@/Components/Navbar";
 import { useForm } from "@inertiajs/inertia-react";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import FormUpdateUser from "@/Components/FormUpdateUser";
-import FormUpdatePassword from "@/Components/FormUpdatePassword";
+import FormUpdateUser from "@/Components/form/FormUpdateUser";
+import FormUpdatePassword from "@/Components/form/FormUpdatePassword";
 import { useToast } from "@/hooks/use-toast";
 
 function Profile() {
@@ -18,11 +18,27 @@ function Profile() {
     const [error, setError] = useState("");
     const [initialData, setInitialData] = useState([]);
     const { toast } = useToast();
+    const [showPassword, setShowPassword] = useState(false);
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [usernameError, setUsernameError] = useState("");
+    const [emailError, setEmailError] = useState("");
+
+    const togglePasswordVisibility = (field) => {
+        if (field === "current") setShowPassword(!showPassword);
+        if (field === "new") setShowNewPassword(!showNewPassword);
+        if (field === "confirm") setShowConfirmPassword(!showConfirmPassword);
+    };
 
     const { data, setData } = useForm({
         ussername: "",
         email: "",
     });
+
+    const isValidEmail = (email) => {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    };
 
     useEffect(() => {
         const fetchUser = async () => {
@@ -48,6 +64,23 @@ function Profile() {
 
     const save = async (e) => {
         e.preventDefault();
+
+        // Reset error state
+        setUsernameError("");
+        setEmailError("");
+
+        if (!data.ussername) {
+            setUsernameError("Username cannot be empty.");
+            return;
+        }
+        if (!data.email) {
+            setEmailError("Email cannot be empty.");
+            return;
+        } else if (!isValidEmail(data.email)) {
+            setEmailError("Invalid email format.");
+            return;
+        }
+
         try {
             const user = JSON.parse(localStorage.getItem("user"));
             if (!user || !user.id) {
@@ -70,7 +103,20 @@ function Profile() {
         setConfirmPasswordError("");
         setError("");
 
-        if (newPassword !== confirmPassword) {
+        if (!password) {
+            setPasswordError("Correct password must required.");
+            return;
+        }
+
+        if (!newPassword | !confirmPassword) {
+            setConfirmPasswordError("New password must required.");
+            return;
+        } else if ((newPassword.length < 8) | (confirmPassword.length < 8)) {
+            setConfirmPasswordError(
+                "The new password must be at least 8 characters."
+            );
+            return;
+        } else if (newPassword !== confirmPassword) {
             setConfirmPasswordError(
                 "New password and confirm password do not match."
             );
@@ -116,7 +162,7 @@ function Profile() {
     };
 
     if (loading) {
-        return <p>Loading...</p>; // Tampilkan loading saat data belum selesai di-fetch
+        return <p>Loading...</p>;
     }
 
     return (
@@ -131,6 +177,8 @@ function Profile() {
                         saveUpdate={save}
                         data={data}
                         setData={setData}
+                        usernameError={usernameError}
+                        emailError={emailError}
                     />
                 </div>
             </div>
@@ -145,6 +193,10 @@ function Profile() {
                     confirmPassword={confirmPassword}
                     newPassword={newPassword}
                     password={password}
+                    showPassword={showPassword}
+                    showNewPassword={showNewPassword}
+                    showConfirmPassword={showConfirmPassword}
+                    togglePasswordVisibility={togglePasswordVisibility}
                 />
             </div>
         </main>

@@ -1,34 +1,68 @@
+import FormAddDivision from "@/Components/form/FormAddDivision";
 import HeaderEdited from "@/Components/HeaderEdited";
+import { useToast } from "@/hooks/use-toast";
 import { useForm } from "@inertiajs/react";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 
 function AddDivision() {
     const [success, setSuccess] = useState(false);
+    const [dataCompany, setDataCompany] = useState([]);
+    const [errors, setErrors] = useState({});
+    const { toast } = useToast();
 
     const { data, setData } = useForm({
-        name_division: "", // Nama key sesuai API
+        name_division: "",
+        company_id: "",
     });
 
     useEffect(() => {
-        const user = JSON.parse(localStorage.getItem("user"));
+        const fetchData = async () => {
+            const user = JSON.parse(localStorage.getItem("user"));
 
-        if (
-            !user?.role || // Penambahan optional chaining
-            (user.role !== "superAdmin" && user.role !== "admin")
-        ) {
-            window.location.href = "/notfound";
-        }
+            if (
+                !user?.role || // Penambahan optional chaining
+                (user.role !== "superAdmin" && user.role !== "admin")
+            ) {
+                window.location.href = "/notfound";
+                return;
+            }
+
+            try {
+                const response = await axios.get(`/api/company`);
+                setDataCompany(response.data.data || []); // Ambil data dari response
+            } catch (error) {
+                console.error(error);
+            }
+        };
+
+        fetchData();
     }, []);
+
+    const validate = () => {
+        const newErrors = {};
+        if (!data.name_division)
+            newErrors.name_division = "Division name is required.";
+        if (!data.company_id)
+            newErrors.company_id = "Company name is required.";
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
 
     const save = async (e) => {
         e.preventDefault();
+        if (!validate()) return;
+
         try {
             await axios.post(`/api/divisions/`, data);
             setSuccess(true);
             window.location.href = "/data/divisions";
         } catch (error) {
-            console.error("Error updating division data:", error);
+            toast({
+                title: "Error",
+                description: "Failed to add Division",
+                variant: "destructive",
+            });
             setSuccess(false);
         }
     };
@@ -51,45 +85,13 @@ function AddDivision() {
                                 Create New Division information.
                             </p>
                         </div>
-                        <form
-                            className="flex flex-col gap-8 mt-6"
-                            onSubmit={save}
-                        >
-                            <div className="flex flex-col gap-1">
-                                <label
-                                    htmlFor="name_division"
-                                    className="block text-sm font-medium text-gray-700"
-                                >
-                                    Division Name
-                                </label>
-                                <input
-                                    type="text"
-                                    autoComplete="off"
-                                    className="w-full rounded-md max-w-xl"
-                                    id="name_division"
-                                    placeholder="Division Name"
-                                    required
-                                    onChange={(e) =>
-                                        setData("name_division", e.target.value)
-                                    }
-                                />
-                            </div>
-                            <div className="flex gap-5">
-                                <button
-                                    type="button"
-                                    className="inline-flex items-center rounded-md border border-transparent bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-gray-700 focus:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 active:bg-gray-900"
-                                    onClick={handleBack}
-                                >
-                                    Back
-                                </button>
-                                <button
-                                    type="submit"
-                                    className="inline-flex items-center rounded-md border border-transparent bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-gray-700 focus:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 active:bg-gray-900"
-                                >
-                                    Save
-                                </button>
-                            </div>
-                        </form>
+                        <FormAddDivision
+                            save={save}
+                            errors={errors}
+                            setData={setData}
+                            dataCompany={dataCompany}
+                            handleBack={handleBack}
+                        />
                     </div>
                 </div>
             </div>

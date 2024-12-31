@@ -3,12 +3,15 @@ import axios from "axios";
 import React, { useState, useEffect } from "react";
 import { Inertia } from "@inertiajs/inertia";
 import { useToast } from "@/hooks/use-toast";
+import DeletedUserModal from "./ModalDeleteUser";
 
 export function TableUsers() {
     const [dataUsers, setDataUsers] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [userToDelete, setUserToDelete] = useState(null);
+    const [editingRowId, setEditingRowId] = useState(null);
+    const [editingValue, setEditingValue] = useState(""); // Menyimpan nilai saat edit
     const { toast } = useToast();
     const itemsPerPage = 10;
 
@@ -22,7 +25,6 @@ export function TableUsers() {
         (async () => {
             try {
                 const users = await axios.get("/api/users");
-
                 setDataUsers(users.data.data || []);
             } catch (error) {
                 console.error("Error fetching data:", error);
@@ -30,23 +32,64 @@ export function TableUsers() {
         })();
     }, []);
 
+    // Fungsi untuk menangani double-click pada sebuah username
+    const handleDoubleClick = (row) => {
+        setEditingRowId(row.id); // Masuk ke mode edit untuk baris tertentu
+        setEditingValue(row.ussername); // Set nilai awal untuk input
+    };
+
+    // Fungsi untuk menangani perubahan teks pada input
+    const handleInputChange = (event) => {
+        setEditingValue(event.target.value); // Perbarui nilai input
+    };
+
+    // untuk menyimpan perubahan saat menekan Enter
+    const handleInputKeyDown = async (event, rowId, email) => {
+        if (event.key === "Enter") {
+            try {
+                // Kirim data ke API
+                await axios.put(`/api/users/${rowId}`, {
+                    ussername: editingValue,
+                    email: email,
+                });
+
+                // Perbarui dataUsers di state
+                setDataUsers((prevData) =>
+                    prevData.map((row) =>
+                        row.id === rowId
+                            ? { ...row, ussername: editingValue }
+                            : row
+                    )
+                );
+
+                toast({
+                    title: "Success",
+                    description: "Username updated successfully.",
+                    variant: "success",
+                });
+
+                setEditingRowId(null); // Keluar dari mode edit
+            } catch (error) {
+                console.error("Error updating username:", error);
+                toast({
+                    title: "Failed to edit username",
+                    description: "Username cannot be the same as existing data",
+                    variant: "destructive",
+                });
+            }
+        }
+    };
+
+    // Fungsi untuk keluar dari mode edit saat input kehilangan fokus
+    const handleInputBlur = () => {
+        setEditingRowId(null); // Keluar dari mode edit
+    };
+
     // Data untuk halaman saat ini
     const currentData = dataUsers.slice(
         (currentPage - 1) * itemsPerPage,
         currentPage * itemsPerPage
     );
-
-    // Fungsi untuk menangani perubahan halaman ke halaman berikutnya
-    const handleNextPage = () => {
-        setCurrentPage((prev) =>
-            Math.min(prev + 1, Math.ceil(dataUsers.length / itemsPerPage))
-        );
-    };
-
-    // Fungsi untuk menangani perubahan halaman ke halaman sebelumnya
-    const handlePreviousPage = () => {
-        setCurrentPage((prev) => Math.max(prev - 1, 1));
-    };
 
     // Fungsi untuk membuka modal
     const openModal = (user) => {
@@ -63,14 +106,13 @@ export function TableUsers() {
     // Fungsi untuk menghapus user
     const handleDelete = async () => {
         try {
-            // Lakukan request untuk menghapus user berdasarkan ID
             await axios.delete(`/api/users/${userToDelete.id}`);
-            // Hapus user dari state dataUsers
             setDataUsers((prev) =>
                 prev.filter((u) => u.id !== userToDelete.id)
             );
             toast({
-                description: "Succesful Delete User",
+                title: "Deleted User",
+                description: "Successfully deleted user.",
                 variant: "success",
             });
             closeModal();
@@ -108,34 +150,59 @@ export function TableUsers() {
                             <td className="px-6 py-4">
                                 {(currentPage - 1) * itemsPerPage + index + 1}
                             </td>
-                            <td className="px-6 py-4">{item.ussername}</td>
+                            {/* Kolom username */}
+                            <td
+                                onDoubleClick={() => handleDoubleClick(item)}
+                                style={{ cursor: "pointer" }}
+                                className="px-6 py-4"
+                            >
+                                {editingRowId === item.id ? (
+                                    <input
+                                        type="text"
+                                        value={editingValue}
+                                        onChange={handleInputChange}
+                                        onKeyDown={(event) =>
+                                            handleInputKeyDown(
+                                                event,
+                                                item.id,
+                                                item.email
+                                            )
+                                        }
+                                        onBlur={handleInputBlur}
+                                        autoFocus
+                                        className="border rounded px-2 py-1"
+                                    />
+                                ) : (
+                                    item.ussername
+                                )}
+                            </td>
                             <td className="px-6 py-4">{item.email}</td>
                             <td className="px-6 py-4">{item.role}</td>
-
-                            {user.role === "superAdmin" ? (
+                            {user.role === "superAdmin" && (
                                 <td className="px-6 py-4 flex gap-4">
                                     <button
                                         onClick={() => handleEdit(item)}
-                                        className="inline-flex items-center rounded-md border border-transparent bg-green-500 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-green-700  active:bg-green-900"
+                                        className="inline-flex items-center rounded-md border border-transparent bg-green-500 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-green-700 active:bg-green-900"
                                     >
                                         Edit
                                     </button>
                                     <button
                                         onClick={() => openModal(item)}
-                                        className="inline-flex items-center rounded-md border border-transparent bg-red-500 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-red-700  active:bg-red-900"
+                                        className="inline-flex items-center rounded-md border border-transparent bg-red-500 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-red-700 active:bg-red-900"
                                     >
                                         Delete
                                     </button>
                                 </td>
-                            ) : null}
+                            )}
                         </tr>
                     ))}
                 </tbody>
             </table>
-            {/* Tombol Next dan Previous */}
             <div className="flex justify-end items-center mt-4 gap-5">
                 <button
-                    onClick={handlePreviousPage}
+                    onClick={() =>
+                        setCurrentPage((prev) => Math.max(prev - 1, 1))
+                    }
                     disabled={currentPage === 1}
                     className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 disabled:opacity-50"
                 >
@@ -143,7 +210,14 @@ export function TableUsers() {
                 </button>
                 <span>{currentPage}</span>
                 <button
-                    onClick={handleNextPage}
+                    onClick={() =>
+                        setCurrentPage((prev) =>
+                            Math.min(
+                                prev + 1,
+                                Math.ceil(dataUsers.length / itemsPerPage)
+                            )
+                        )
+                    }
                     disabled={
                         currentPage >=
                         Math.ceil(dataUsers.length / itemsPerPage)
@@ -153,35 +227,12 @@ export function TableUsers() {
                     Next
                 </button>
             </div>
-
-            {/* Modal */}
             {isModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-                    <div className="bg-white rounded-lg p-6">
-                        <h2 className="text-xl font-bold">Konfirmasi Hapus</h2>
-                        <p className="my-4">
-                            Apakah Anda yakin ingin menghapus{" "}
-                            <span className="font-bold">
-                                {userToDelete?.ussername}
-                            </span>
-                            ?
-                        </p>
-                        <div className="flex justify-end gap-4">
-                            <button
-                                onClick={closeModal}
-                                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handleDelete}
-                                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-                            >
-                                Hapus
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                <DeletedUserModal
+                    userToDelete={userToDelete}
+                    closeModal={closeModal}
+                    handleDelete={handleDelete}
+                />
             )}
         </div>
     );

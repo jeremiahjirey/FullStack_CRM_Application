@@ -66,7 +66,7 @@ function Divisions() {
                                 onClick={() => handleAdd()}
                                 className="inline-flex items-center rounded-md border border-transparent bg-green-500 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-green-700  active:bg-green-900"
                             >
-                                Create New Employees
+                                Add Division
                             </button>
                         ) : null}
                     </div>

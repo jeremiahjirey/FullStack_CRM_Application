@@ -1,3 +1,4 @@
+import FormEditUser from "@/Components/form/FormEditUser";
 import HeaderEdited from "@/Components/HeaderEdited";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "@inertiajs/react";
@@ -8,12 +9,23 @@ function EditUser() {
     const [id, setId] = useState(null);
     const [success, setSuccess] = useState(false);
     const { toast } = useToast();
+    const [showPassword, setShowPassword] = useState(false);
+
+    const togglePasswordVisibility = () => {
+        setShowPassword(!showPassword);
+    };
 
     const { data, setData } = useForm({
         ussername: "",
         email: "",
         role: "",
         password: "",
+    });
+
+    const [errors, setErrors] = useState({
+        ussername: "",
+        email: "",
+        role: "",
     });
 
     useEffect(() => {
@@ -50,27 +62,71 @@ function EditUser() {
 
             fetchData(); // Panggil API
         }
-    }, [id]); // Hanya dipanggil saat id berubah
+    }, [id]);
+
+    const validateForm = () => {
+        let isValid = true;
+        let tempErrors = {
+            ussername: "",
+            email: "",
+            role: "",
+        };
+
+        // Validasi username
+        if (!data.ussername) {
+            tempErrors.ussername = "Username is required";
+            isValid = false;
+        }
+
+        // Validasi email
+        if (!data.email) {
+            tempErrors.email = "Email is required";
+            isValid = false;
+        } else if (!validateEmail(data.email)) {
+            tempErrors.email = "Please enter a valid email address";
+            isValid = false;
+        }
+
+        // Validasi role
+        if (!data.role) {
+            tempErrors.role = "Role is required";
+            isValid = false;
+        }
+
+        setErrors(tempErrors);
+        return isValid;
+    };
+
+    const validateEmail = (email) => {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    };
 
     const save = async (e) => {
         e.preventDefault();
+
+        // Validasi form manual
+        if (!validateForm()) return;
+
         try {
             // Tunggu respons dari server
             await axios.put(`/api/users/${id}`, data);
             setSuccess(true);
-            // window.location.href = "/data/users";
-            toast({
-                title: "Succesful Edit User",
-                variant: "success",
-            });
+            window.location.href = "/data/users";
         } catch (error) {
             console.error(error);
             setSuccess(false);
+            toast({
+                title: "Failed to edit user",
+                description:
+                    "Username and email cannot be the same as existing data.",
+                variant: "destructive",
+            });
         }
     };
 
     const handleBack = () => {
-        window.location.href = "/data/users"; // Arahkan kembali ke halaman /data/users
+        window.location.href = "/data/users";
     };
 
     return (
@@ -89,105 +145,15 @@ function EditUser() {
                                 address.
                             </p>
                         </div>
-                        <form
-                            className="flex flex-col gap-8 mt-6"
-                            onSubmit={save}
-                        >
-                            <div className="flex flex-col gap-1">
-                                <label
-                                    htmlFor="ussername"
-                                    className="block text-sm font-medium text-gray-700"
-                                >
-                                    Username
-                                </label>
-                                <input
-                                    type="text"
-                                    autoComplete="off"
-                                    className="w-full rounded-md max-w-xl"
-                                    id="ussername"
-                                    required
-                                    value={data.ussername || ""}
-                                    onChange={(e) =>
-                                        setData("ussername", e.target.value)
-                                    }
-                                />
-                            </div>
-                            <div className="flex flex-col gap-1">
-                                <label
-                                    htmlFor="email"
-                                    className="block text-sm font-medium text-gray-700"
-                                >
-                                    Email
-                                </label>
-                                <input
-                                    type="email"
-                                    autoComplete="off"
-                                    value={data.email || ""}
-                                    className="w-full rounded-md max-w-xl"
-                                    id="email"
-                                    required
-                                    onChange={(e) =>
-                                        setData("email", e.target.value)
-                                    }
-                                />
-                            </div>
-                            <div className="flex flex-col gap-1">
-                                <label
-                                    htmlFor="role"
-                                    className="block text-sm font-medium text-gray-700"
-                                >
-                                    Role
-                                </label>
-                                <select
-                                    id="role"
-                                    className="w-full rounded-md max-w-xl"
-                                    required
-                                    value={data.role || ""}
-                                    onChange={(e) =>
-                                        setData("role", e.target.value)
-                                    }
-                                >
-                                    <option value="user">User</option>
-                                    <option value="admin">Admin</option>
-                                    <option value="superAdmin">
-                                        Super Admin
-                                    </option>
-                                </select>
-                            </div>
-                            <div className="flex flex-col gap-1">
-                                <label
-                                    htmlFor="password"
-                                    className="block text-sm font-medium text-gray-700"
-                                >
-                                    New Password
-                                </label>
-                                <input
-                                    type="password"
-                                    autoComplete="off"
-                                    className="w-full rounded-md max-w-xl"
-                                    id="password"
-                                    placeholder="Create New Password for User"
-                                    onChange={(e) =>
-                                        setData("password", e.target.value)
-                                    }
-                                />
-                            </div>
-                            <div className="flex gap-5">
-                                <button
-                                    type="button"
-                                    className="inline-flex items-center rounded-md border border-transparent bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-gray-700 focus:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 active:bg-gray-900"
-                                    onClick={handleBack}
-                                >
-                                    Back
-                                </button>
-                                <button
-                                    type="submit"
-                                    className="inline-flex items-center rounded-md border border-transparent bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-gray-700 focus:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 active:bg-gray-900"
-                                >
-                                    Save
-                                </button>
-                            </div>
-                        </form>
+                        <FormEditUser
+                            save={save}
+                            data={data}
+                            errors={errors}
+                            setData={setData}
+                            handleBack={handleBack}
+                            togglePasswordVisibility={togglePasswordVisibility}
+                            showPassword={showPassword}
+                        />
                     </div>
                 </div>
             </div>

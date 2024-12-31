@@ -12,6 +12,7 @@ function Menu() {
 
     const user = JSON.parse(localStorage.getItem("user"));
     const role = user?.role;
+    const currentPath = window.location.pathname;
 
     return (
         <div className="w-full">
@@ -23,10 +24,13 @@ function Menu() {
                     <ul className="space-y-3 ml-4">
                         {item.items.map((subItem) => {
                             if (subItem.visible.includes(role)) {
+                                const isActive = currentPath === subItem.href;
                                 return (
                                     <li
                                         key={subItem.label}
-                                        className="rounded-md md:px-2 hover:bg-skyLight active:scale-105"
+                                        className={`rounded-md md:px-2 hover:bg-sky ${
+                                            isActive ? "bg-sky text-white" : ""
+                                        } active:scale-105`}
                                     >
                                         {subItem.label === "Logout" ? (
                                             <button

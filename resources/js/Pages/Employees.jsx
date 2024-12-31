@@ -62,9 +62,9 @@ function Employees() {
                         {user.role === "superAdmin" || user.role === "admin" ? (
                             <button
                                 onClick={() => handleAdd()}
-                                className="inline-flex items-center rounded-md border border-transparent bg-green-500 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-green-700  active:bg-green-900"
+                                className="inline-flex items-center rounded-md border border-transparent bg-green-500 px-2 sm:px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-green-700  active:bg-green-900"
                             >
-                                Create New Employees
+                                Add Employees
                             </button>
                         ) : null}
                     </div>

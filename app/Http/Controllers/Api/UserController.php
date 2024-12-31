@@ -113,6 +113,7 @@ class UserController extends Controller
 
     // Update ussername dan email
     $dataUser->ussername = $request->ussername;
+    $dataUser->email = $request->email;
     
     if ($request->password) {
         $dataUser->password = bcrypt($request->password);

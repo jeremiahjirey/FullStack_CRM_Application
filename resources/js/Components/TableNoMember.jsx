@@ -1,4 +1,3 @@
-import { Inertia } from "@inertiajs/inertia";
 import React from "react";
 
 function TableNoMember({
@@ -30,7 +29,7 @@ function TableNoMember({
             </td>
 
             {/* Kolom Nama */}
-            <td className="px-6 py-4 border-x text-center italic text-gray-500">
+            <td className="px-6 py-4 border-x italic text-gray-500">
                 No Members
             </td>
             {/* Kolom Aksi */}

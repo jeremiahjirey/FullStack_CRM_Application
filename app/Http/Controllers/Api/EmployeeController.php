@@ -101,10 +101,10 @@ class EmployeeController extends Controller
         $rules=[
             'first_name'=>'required',
             'last_name'=>'required',
-            'company_id'=>'required',
+            'company_id'=>'nullable',
             'email'=>'required',
             'phone'=>'required',
-            'division_id'=>'required',
+            'division_id'=>'nullable',
         ];
 
         $validate = Validator::make($request->all(),$rules);
