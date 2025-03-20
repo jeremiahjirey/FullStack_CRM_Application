@@ -1,0 +1,31 @@
+version: '3.8'
+services:
+  laravel:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.laravel
+    container_name: laravel-app
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_ENV=production
+      - DB_HOST=your_db_host
+    networks:
+      - app-network
+
+  react:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.react
+    container_name: react-app
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      # Misal: REACT_APP_API_URL=http://laravel:8000/api
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
